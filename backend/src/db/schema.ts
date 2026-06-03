@@ -7,7 +7,7 @@ export const users = pgTable("users", {
     name: text("name"),
     imageURL: text("image_url"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
 export const ingredients = pgTable("ingredients", {
@@ -22,7 +22,7 @@ export const ingredients = pgTable("ingredients", {
     purchaseDate: timestamp("purchase_date"),
     expirationDate: timestamp("expiration_date"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
 export const meals = pgTable("meals", {
@@ -34,6 +34,7 @@ export const meals = pgTable("meals", {
     mealType: text("meal_type").notNull(), // breakfast, lunch, dinner
     recipeName: text("recipe_name"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
 // each user can be associated with many ingredients and many meals

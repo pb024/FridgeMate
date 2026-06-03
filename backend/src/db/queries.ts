@@ -24,12 +24,16 @@ export const updateUser = async (id: string, data: Partial<NewUser>) => {
 
 // upsert => create or update
 export const upsertUser = async (data: NewUser) => {
-    const existingUser = await getUserByID(data.id);
-    if (existingUser) {
-        return await updateUser(data.id, data);
-    } else {
-        return await createUser(data);
-    }
+    const [user] = await db.insert(users).values(data).onConflictDoUpdate({
+        target: users.id,
+        set: {
+            email: data.email,
+            name: data.name,
+            imageURL: data.imageURL,
+            updatedAt: new Date(),
+        }
+    }).returning();
+    return user;
 }
 
 // INGREDIENT QUERIES
@@ -48,6 +52,22 @@ export const getIngredientsByUserID = async (userID: string) => {
 
 export const updateIngredient = async (id: string, data: Partial<NewIngredient>) => {
     const [ingredient] = await db.update(ingredients).set(data).where(eq(ingredients.id, id)).returning();
+    return ingredient;
+}
+
+const upsertIngredient = async (data: NewIngredient) => {
+    const [ingredient] = await db.insert(ingredients).values(data).onConflictDoUpdate({
+        target: ingredients.id,
+        set: {
+            name: data.name,
+            quantity: data.quantity,
+            unit: data.unit,
+            category: data.category,
+            purchaseDate: data.purchaseDate,
+            expirationDate: data.expirationDate,
+            updatedAt: new Date(),
+        }
+    }).returning();
     return ingredient;
 }
 
@@ -71,6 +91,19 @@ export const getMealsByUserID = async (userID: string) => {
 
 export const updateMeal = async (id: string, data: Partial<NewMeal>) => {
     const [meal] = await db.update(meals).set(data).where(eq(meals.id, id)).returning();
+    return meal;
+}
+
+export const upsertMeal = async (data: NewMeal) => {
+    const [meal] = await db.insert(meals).values(data).onConflictDoUpdate({
+        target: meals.id,
+        set: {
+            date: data.date,
+            mealType: data.mealType,
+            recipeName: data.recipeName,
+            updatedAt: new Date(),
+        }
+    }).returning();
     return meal;
 }
 

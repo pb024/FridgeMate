@@ -34,6 +34,7 @@ export const meals = pgTable("meals", {
     mealType: text("meal_type").notNull(), // breakfast, lunch, dinner
     recipeName: text("recipe_name"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 // each user can be associated with many ingredients and many meals

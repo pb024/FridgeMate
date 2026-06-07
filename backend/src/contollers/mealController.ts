@@ -2,6 +2,13 @@ import type { Request, Response } from "express";
 import * as queries from "../db/queries";
 import { getAuth } from "@clerk/express";
 
+function parseDate(value: unknown): Date | undefined | null {
+    if (value === undefined || value === null || value === "") return undefined;
+    const ts = Date.parse(String(value));
+    if (isNaN(ts)) return null;
+    return new Date(ts);
+}
+
 // Get meals for current user (protected)
 export const getMyMeals = async (req: Request, res: Response) => {
     try {
@@ -28,9 +35,12 @@ export const createMeal = async (req: Request, res: Response) => {
             return res.status(400).json({ error: "date and mealType are required" });
         }
 
+        const parsedDate = parseDate(date);
+        if (parsedDate === null) return res.status(400).json({ error: "Invalid date" });
+
         const meal = await queries.createMeal({
             userID: userId,
-            date: new Date(date),
+            date: parsedDate!,
             mealType,
             recipeName,
         });
@@ -49,20 +59,18 @@ export const updateMeal = async (req: Request, res: Response) => {
         if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
         const id = req.params.id as string;
-
-        const userMeals = await queries.getMealsByUserID(userId);
-        const existingMeal = userMeals.find(m => m.id === id);
-        if (!existingMeal) {
-            return res.status(404).json({ error: "Meal not found" });
-        }
-
         const { date, mealType, recipeName } = req.body;
 
-        const meal = await queries.updateMeal(id, {
-            date: date ? new Date(date) : undefined,
+        const parsedDate = parseDate(date);
+        if (parsedDate === null) return res.status(400).json({ error: "Invalid date" });
+
+        const meal = await queries.updateMealByOwner(id, userId, {
+            date: parsedDate,
             mealType,
             recipeName,
         });
+
+        if (!meal) return res.status(404).json({ error: "Meal not found" });
 
         res.status(200).json(meal);
     } catch (error) {
@@ -79,13 +87,9 @@ export const deleteMeal = async (req: Request, res: Response) => {
 
         const id = req.params.id as string;
 
-        const userMeals = await queries.getMealsByUserID(userId);
-        const existingMeal = userMeals.find(m => m.id === id);
-        if (!existingMeal) {
-            return res.status(404).json({ error: "Meal not found" });
-        }
+        const deleted = await queries.deleteMealByOwner(id, userId);
+        if (!deleted) return res.status(404).json({ error: "Meal not found" });
 
-        await queries.deleteMeal(id);
         res.status(200).json({ message: "Meal deleted successfully" });
     } catch (error) {
         console.error("Error deleting meal:", error);

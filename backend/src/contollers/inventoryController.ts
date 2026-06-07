@@ -3,6 +3,13 @@ import type { Request, Response } from "express";
 import * as queries from "../db/queries";
 import { getAuth } from "@clerk/express";
 
+function parseDate(value: unknown): Date | undefined | null {
+    if (value === undefined || value === null || value === "") return undefined;
+    const ts = Date.parse(String(value));
+    if (isNaN(ts)) return null; // signals invalid
+    return new Date(ts);
+}
+
 // Get inventory items by current user (protected)
 export const getMyInventory = async (req: Request, res: Response) => {
     try {
@@ -29,14 +36,19 @@ export const createIngredient = async (req: Request, res: Response) => {
             return res.status(400).json({ error: "name, quantity, and unit are required" });
         }
 
+        const parsedPurchaseDate = parseDate(purchaseDate);
+        const parsedExpirationDate = parseDate(expirationDate);
+        if (parsedPurchaseDate === null) return res.status(400).json({ error: "Invalid purchaseDate" });
+        if (parsedExpirationDate === null) return res.status(400).json({ error: "Invalid expirationDate" });
+
         const product = await queries.createIngredient({
             userID: userId,
             name,
             quantity,
             unit,
             category,
-            purchaseDate: purchaseDate ? new Date(purchaseDate) : undefined,
-            expirationDate: expirationDate ? new Date(expirationDate) : undefined,
+            purchaseDate: parsedPurchaseDate,
+            expirationDate: parsedExpirationDate,
         });
 
         res.status(201).json(product);
@@ -54,22 +66,23 @@ export const updateIngredient = async (req: Request, res: Response) => {
 
         const id = req.params.id as string;
 
-        const userIngredients = await queries.getIngredientsByUserID(userId);
-        const existingIngredient = userIngredients.find(i => i.id === id);
-        if (!existingIngredient) {
-            return res.status(404).json({ error: "Ingredient not found" });
-        }
-
         const { name, quantity, unit, category, purchaseDate, expirationDate } = req.body;
 
-        const product = await queries.updateIngredient(id, {
+        const parsedPurchaseDate = parseDate(purchaseDate);
+        const parsedExpirationDate = parseDate(expirationDate);
+        if (parsedPurchaseDate === null) return res.status(400).json({ error: "Invalid purchaseDate" });
+        if (parsedExpirationDate === null) return res.status(400).json({ error: "Invalid expirationDate" });
+
+        const product = await queries.updateIngredientByOwner(id, userId, {
             name,
             quantity,
             unit,
             category,
-            purchaseDate: purchaseDate ? new Date(purchaseDate) : undefined,
-            expirationDate: expirationDate ? new Date(expirationDate) : undefined,
+            purchaseDate: parsedPurchaseDate,
+            expirationDate: parsedExpirationDate,
         });
+
+        if (!product) return res.status(404).json({ error: "Ingredient not found" });
 
         res.status(200).json(product);
     } catch (error) {
@@ -86,13 +99,9 @@ export const deleteIngredient = async (req: Request, res: Response) => {
 
         const id = req.params.id as string;
 
-        const userIngredients = await queries.getIngredientsByUserID(userId);
-        const existingIngredient = userIngredients.find(i => i.id === id);
-        if (!existingIngredient) {
-            return res.status(404).json({ error: "Ingredient not found" });
-        }
+        const deleted = await queries.deleteIngredientByOwner(id, userId);
+        if (!deleted) return res.status(404).json({ error: "Ingredient not found" });
 
-        await queries.deleteIngredient(id);
         res.status(200).json({ message: "Ingredient deleted successfully" });
     } catch (error) {
         console.error("Error deleting product:", error);

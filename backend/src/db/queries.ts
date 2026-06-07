@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { users, ingredients, meals, type NewUser, type NewIngredient, type NewMeal } from "./schema";
 
 // USER QUERIES
@@ -75,6 +75,21 @@ export const deleteIngredient = async (id: string) => {
     await db.delete(ingredients).where(eq(ingredients.id, id));
 }
 
+export const updateIngredientByOwner = async (id: string, userID: string, data: Partial<NewIngredient>) => {
+    const [ingredient] = await db.update(ingredients)
+        .set(data)
+        .where(and(eq(ingredients.id, id), eq(ingredients.userID, userID)))
+        .returning();
+    return ingredient;
+}
+
+export const deleteIngredientByOwner = async (id: string, userID: string) => {
+    const [ingredient] = await db.delete(ingredients)
+        .where(and(eq(ingredients.id, id), eq(ingredients.userID, userID)))
+        .returning();
+    return ingredient;
+}
+
 // MEAL QUERIES
 
 export const createMeal = async (data: NewMeal) => {
@@ -109,4 +124,19 @@ export const upsertMeal = async (data: NewMeal) => {
 
 export const deleteMeal = async (id: string) => {
     await db.delete(meals).where(eq(meals.id, id));
+}
+
+export const updateMealByOwner = async (id: string, userID: string, data: Partial<NewMeal>) => {
+    const [meal] = await db.update(meals)
+        .set(data)
+        .where(and(eq(meals.id, id), eq(meals.userID, userID)))
+        .returning();
+    return meal;
+}
+
+export const deleteMealByOwner = async (id: string, userID: string) => {
+    const [meal] = await db.delete(meals)
+        .where(and(eq(meals.id, id), eq(meals.userID, userID)))
+        .returning();
+    return meal;
 }

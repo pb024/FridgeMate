@@ -8,11 +8,11 @@ function App() {
   return (
     <div className="min-h-screen bg-base-100">
       <Navbar />
-      <main className="max-x-5xl mx-auto px-4 py-8">
+      <main className="max-w-5xl mx-auto px-4 py-8">
         <Routes>
           <Route path="/" element={<Homepage />} />
           <Route path="/inventory/:id" element={<InventoryPage />} />
-          <Route path="/Meals" element={<MealsPage />} />
+          <Route path="/meals" element={<MealsPage />} />
         </Routes>
       </main>
     </div>

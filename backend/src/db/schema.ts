@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, integer, unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 export const users = pgTable("users", {
@@ -37,10 +37,25 @@ export const meals = pgTable("meals", {
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const savedRecipes = pgTable("saved_recipes", {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userID: text("user_id")
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
+    spoonacularId: integer("spoonacular_id").notNull(),
+    title: text("title").notNull(),
+    image: text("image"),
+    sourceUrl: text("source_url"),
+    savedAt: timestamp("saved_at").notNull().defaultNow(),
+}, (t) => ({
+    unq: unique().on(t.userID, t.spoonacularId),
+}));
+
 // each user can be associated with many ingredients and many meals
 export const usersRelations = relations(users, ({ many }) => ({
     ingredients: many(ingredients), //  One user → many ingredients
     meals: many(meals), //  One user → many meals
+    savedRecipes: many(savedRecipes),
 }));
 
 // each ingredients maps to one user
@@ -53,6 +68,10 @@ export const mealsRelations = relations(meals, ({ one }) => ({
     user: one(users, { fields: [meals.userID], references: [users.id] })
 }));
 
+export const savedRecipesRelations = relations(savedRecipes, ({ one }) => ({
+    user: one(users, { fields: [savedRecipes.userID], references: [users.id] }),
+}));
+
 // type inference
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -62,3 +81,6 @@ export type NewIngredient = typeof ingredients.$inferInsert;
 
 export type Meal = typeof meals.$inferSelect;
 export type NewMeal = typeof meals.$inferInsert;
+
+export type SavedRecipe = typeof savedRecipes.$inferSelect;
+export type NewSavedRecipe = typeof savedRecipes.$inferInsert;

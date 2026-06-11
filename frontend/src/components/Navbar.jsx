@@ -28,7 +28,7 @@ function Navbar() {
                 >
                     Inventory
                 </NavLink>
-                <NavLink to="/Meals" className={navLinkClass}>
+                <NavLink to="/meals" className={navLinkClass}>
                     Meals
                 </NavLink>
             </div>

@@ -7,7 +7,8 @@ const EMPTY_FORM = { name: '', quantity: '', unit: '', category: '', purchaseDat
 
 function daysUntil(dateStr) {
     if (!dateStr) return null;
-    return Math.ceil((new Date(dateStr) - new Date()) / 86400000);
+    const diff = (new Date(dateStr) - new Date()) / 86400000;
+    return diff > 0 ? Math.ceil(diff) : Math.floor(diff);
 }
 
 function formatDate(dateStr) {
@@ -17,7 +18,8 @@ function formatDate(dateStr) {
 
 function toInputDate(dateStr) {
     if (!dateStr) return '';
-    return new Date(dateStr).toISOString().slice(0, 10);
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
 }
 
 function IngredientModal({ modalRef, editItem, onSubmit, isPending }) {

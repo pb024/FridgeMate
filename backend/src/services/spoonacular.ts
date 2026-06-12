@@ -21,7 +21,7 @@ async function spoonacularFetch(path: string, params: Record<string, string | nu
 
 export const searchByIngredients = (ingredients: string[], number = 10) =>
     spoonacularFetch("/recipes/findByIngredients", {
-        ingredients: ingredients.join(",+"),
+        ingredients: ingredients.join(","),
         number,
         ranking: 1,       // maximise used ingredients
         ignorePantry: true,

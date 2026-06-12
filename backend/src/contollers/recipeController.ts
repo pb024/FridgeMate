@@ -72,9 +72,13 @@ export const saveRecipe = async (req: Request, res: Response) => {
         const { userId } = getAuth(req);
         if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-        const { spoonacularId, title, image, sourceUrl } = req.body;
-        if (!spoonacularId || !title) {
-            return res.status(400).json({ error: "spoonacularId and title are required" });
+        const { spoonacularId: rawId, title, image, sourceUrl } = req.body;
+        const spoonacularId = parseInt(rawId, 10);
+        if (!Number.isInteger(spoonacularId) || spoonacularId <= 0) {
+            return res.status(400).json({ error: "spoonacularId must be a positive integer" });
+        }
+        if (!title) {
+            return res.status(400).json({ error: "title is required" });
         }
 
         const recipe = await queries.saveRecipe({

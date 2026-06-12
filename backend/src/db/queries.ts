@@ -1,6 +1,6 @@
 import { db } from "./index";
-import { eq, and } from "drizzle-orm";
-import { users, ingredients, meals, type NewUser, type NewIngredient, type NewMeal } from "./schema";
+import { eq, and, desc } from "drizzle-orm";
+import { users, ingredients, meals, savedRecipes, type NewUser, type NewIngredient, type NewMeal, type NewSavedRecipe } from "./schema";
 
 // USER QUERIES
 
@@ -140,3 +140,27 @@ export const deleteMealByOwner = async (id: string, userID: string) => {
         .returning();
     return meal;
 }
+
+// SAVED RECIPE QUERIES
+
+export const getSavedRecipesByUserID = async (userID: string) => {
+    return db.query.savedRecipes.findMany({
+        where: eq(savedRecipes.userID, userID),
+        orderBy: desc(savedRecipes.savedAt),
+    });
+};
+
+export const saveRecipe = async (data: NewSavedRecipe) => {
+    const [recipe] = await db.insert(savedRecipes)
+        .values(data)
+        .onConflictDoNothing()
+        .returning();
+    return recipe;
+};
+
+export const deleteSavedRecipeByOwner = async (id: string, userID: string) => {
+    const [recipe] = await db.delete(savedRecipes)
+        .where(and(eq(savedRecipes.id, id), eq(savedRecipes.userID, userID)))
+        .returning();
+    return recipe;
+};

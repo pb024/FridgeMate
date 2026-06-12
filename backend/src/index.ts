@@ -5,6 +5,7 @@ import { clerkMiddleware } from "@clerk/express";
 import userRoutes from "./routes/userRoutes";
 import inventoryRoutes from "./routes/inventoryRoutes";
 import recipesRoutes from "./routes/mealRoutes";
+import spoonacularRoutes from "./routes/recipeRoutes";
 
 const app = express();
 
@@ -16,13 +17,14 @@ app.use(express.urlencoded({ extended: true })); // parses form data (like HTML 
 
 
 // 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
     res.json({
         message: "Welcome to FridgeMate!",
         endpoints: {
             users: "/api/users",
             inventory: "/api/inventory",
             recipes: "/api/recipes",
+            spoonacular: "/api/spoonacular",
         }
     });
 });
@@ -30,6 +32,7 @@ app.get("/", (req, res) => {
 app.use("/api/users", userRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/recipes", recipesRoutes);
+app.use("/api/spoonacular", spoonacularRoutes);
 
 // starts the server
 app.listen(ENV.PORT, () => console.log("Server is up and running on PORT:", ENV.PORT));

@@ -36,16 +36,12 @@ function Navbar() {
             <div className="navbar-end">
                 <SignedOut>
                     <SignInButton mode="modal">
-                        <button className="px-3 py-1 rounded-md font-medium transition-colors hover:bg-base-300">
-                            Sign In
-                        </button>
+                        <button className="btn btn-ghost btn-sm">Sign In</button>
                     </SignInButton>
                 </SignedOut>
                 <SignedIn>
                     <SignOutButton>
-                        <button className="px-3 py-1 rounded-md font-medium transition-colors hover:bg-base-300">
-                            Sign Out
-                        </button>
+                        <button className="btn btn-ghost btn-sm">Sign Out</button>
                     </SignOutButton>
                 </SignedIn>
             </div>

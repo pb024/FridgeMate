@@ -24,7 +24,7 @@ function MealModal({ modalRef, prefillRecipeName, onSubmit, isPending }) {
     const [form, setForm] = useState({ date: today(), mealType: '', recipeName: '' });
 
     useEffect(() => {
-        setForm({ date: today(), mealType: '', recipeName: prefillRecipeName || '' });
+        setForm(f => ({ ...f, recipeName: prefillRecipeName || '' }));
     }, [prefillRecipeName]);
 
     const set = (e) => setForm(f => ({ ...f, [e.target.name]: e.target.value }));

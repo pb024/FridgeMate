@@ -43,8 +43,16 @@ function useSpoonacular() {
 
     const invalidateSaved = () => queryClient.invalidateQueries({ queryKey: ['spoonacular', 'saved'] });
 
-    const saveMutation = useMutation({ mutationFn: saveRecipe, onSuccess: invalidateSaved });
-    const unsaveMutation = useMutation({ mutationFn: unsaveRecipe, onSuccess: invalidateSaved });
+    const saveMutation = useMutation({
+        mutationFn: saveRecipe,
+        onSuccess: invalidateSaved,
+        onError: (err) => console.error('Failed to save recipe:', err),
+    });
+    const unsaveMutation = useMutation({
+        mutationFn: unsaveRecipe,
+        onSuccess: invalidateSaved,
+        onError: (err) => console.error('Failed to unsave recipe:', err),
+    });
 
     const savedRecipes = savedQuery.data ?? [];
     const savedIds = new Set(savedRecipes.map(r => r.spoonacularId));

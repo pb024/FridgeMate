@@ -1,6 +1,7 @@
 import { useAuth, useUser, SignInButton } from '@clerk/clerk-react'
 import { useQuery } from '@tanstack/react-query'
-import { getInventory, getMeals } from '../lib/api'
+import { Link } from 'react-router'
+import { getInventory, searchRecipesByInventory } from '../lib/api'
 
 function isExpiringSoon(dateStr, days = 7) {
     if (!dateStr) return false;
@@ -9,16 +10,6 @@ function isExpiringSoon(dateStr, days = 7) {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() + days);
     return exp >= now && exp <= cutoff;
-}
-
-function isUpcoming(dateStr, days = 7) {
-    if (!dateStr) return false;
-    const d = new Date(dateStr);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() + days);
-    return d >= today && d <= cutoff;
 }
 
 function formatDate(dateStr) {
@@ -33,55 +24,59 @@ function Dashboard() {
         queryFn: getInventory,
     });
 
-    const { data: meals = [], isLoading: loadingMeals } = useQuery({
-        queryKey: ['meals'],
-        queryFn: getMeals,
+    const { data: recipes = [], isLoading: loadingRecipes } = useQuery({
+        queryKey: ['spoonacular', 'inventory'],
+        queryFn: searchRecipesByInventory,
+        enabled: inventory.length > 0,
     });
 
     const expiringSoon = inventory.filter(item => isExpiringSoon(item.expirationDate));
-    const upcomingMeals = meals
-        .filter(meal => isUpcoming(meal.date))
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
+    const inventoryLink = user ? `/inventory/${user.id}` : '/inventory';
+    const previewRecipes = recipes.slice(0, 4);
 
     return (
         <div className="space-y-8">
-            <div>
-                <h1 className="text-3xl font-bold">
-                    Welcome back, {user?.firstName || user?.name}!
-                </h1>
-                <p className="text-base-content/60 mt-1">Here's what's going on in your kitchen.</p>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="stat bg-base-200 rounded-box">
-                    <div className="stat-title">Total Items</div>
-                    <div className="stat-value">{inventory.length}</div>
-                    <div className="stat-desc">in your fridge</div>
-                </div>
-                <div className="stat bg-base-200 rounded-box">
-                    <div className="stat-title">Expiring Soon</div>
-                    <div className={`stat-value ${expiringSoon.length > 0 ? 'text-warning' : ''}`}>
-                        {expiringSoon.length}
+            {/* Hero Banner */}
+            <div className="bg-primary text-primary-content rounded-2xl p-8">
+                <h1 className="text-3xl font-bold mb-2">Welcome to FridgeMate 🥦</h1>
+                <p className="text-primary-content/80 mb-6">
+                    Plan meals using what's already in your fridge — reduce waste, save money.
+                </p>
+                <div className="flex gap-4 flex-wrap">
+                    <div className="bg-white/20 rounded-xl px-5 py-3 min-w-36">
+                        <p className="text-2xl font-bold">{inventory.length}</p>
+                        <p className="text-sm text-primary-content/80">Items in inventory</p>
                     </div>
-                    <div className="stat-desc">within 7 days</div>
-                </div>
-                <div className="stat bg-base-200 rounded-box">
-                    <div className="stat-title">Upcoming Meals</div>
-                    <div className="stat-value">{upcomingMeals.length}</div>
-                    <div className="stat-desc">next 7 days</div>
+                    <div className="bg-white/20 rounded-xl px-5 py-3 min-w-36">
+                        <p className="text-2xl font-bold">{expiringSoon.length}</p>
+                        <p className="text-sm text-primary-content/80">Expiring this week</p>
+                    </div>
                 </div>
             </div>
 
+            {/* Expiring Soon */}
             <section>
-                <h2 className="text-xl font-semibold mb-3">Expiring Soon</h2>
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold">Expiring Soon</h2>
+                    <Link to={inventoryLink} className="text-primary text-sm font-medium hover:underline">
+                        Manage inventory →
+                    </Link>
+                </div>
+
                 {loadingInventory ? (
                     <div className="flex gap-3">
-                        {[...Array(3)].map((_, i) => (
-                            <div key={i} className="skeleton h-24 w-40 rounded-box" />
+                        {[...Array(4)].map((_, i) => (
+                            <div key={i} className="skeleton h-24 w-40 rounded-xl" />
                         ))}
                     </div>
                 ) : expiringSoon.length === 0 ? (
-                    <p className="text-base-content/50">Nothing expiring in the next 7 days.</p>
+                    <div className="border-2 border-dashed border-base-300 rounded-xl py-10 text-center">
+                        <p className="text-base-content/50 mb-2">No items expiring in the next 7 days.</p>
+                        <Link to={inventoryLink} className="text-primary text-sm font-medium hover:underline">
+                            Add items to your inventory →
+                        </Link>
+                    </div>
                 ) : (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                         {expiringSoon.map(item => (
@@ -101,37 +96,62 @@ function Dashboard() {
                 )}
             </section>
 
+            {/* Suggested Recipes */}
             <section>
-                <h2 className="text-xl font-semibold mb-3">Upcoming Meals</h2>
-                {loadingMeals ? (
-                    <div className="space-y-2">
-                        {[...Array(3)].map((_, i) => (
-                            <div key={i} className="skeleton h-12 w-full rounded-box" />
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold">Suggested Recipes</h2>
+                    <Link to="/meals" className="text-primary text-sm font-medium hover:underline">
+                        Browse all recipes →
+                    </Link>
+                </div>
+
+                {loadingRecipes ? (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {[...Array(4)].map((_, i) => (
+                            <div key={i} className="skeleton h-44 rounded-xl" />
                         ))}
                     </div>
-                ) : upcomingMeals.length === 0 ? (
-                    <p className="text-base-content/50">No meals planned for the next 7 days.</p>
+                ) : inventory.length === 0 ? (
+                    <div className="border-2 border-dashed border-base-300 rounded-xl py-10 text-center">
+                        <p className="text-base-content/50 mb-2">
+                            Add items to your inventory to get recipe suggestions.
+                        </p>
+                        <Link to={inventoryLink} className="text-primary text-sm font-medium hover:underline">
+                            Add ingredients →
+                        </Link>
+                    </div>
+                ) : previewRecipes.length === 0 ? (
+                    <div className="border-2 border-dashed border-base-300 rounded-xl py-10 text-center">
+                        <p className="text-base-content/50">No recipe suggestions available right now.</p>
+                    </div>
                 ) : (
-                    <div className="space-y-2">
-                        {upcomingMeals.map(meal => (
-                            <div
-                                key={meal.id}
-                                className="flex items-center gap-3 p-3 bg-base-200 rounded-box"
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {previewRecipes.map(recipe => (
+                            <Link
+                                key={recipe.id}
+                                to="/meals"
+                                className="card bg-base-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
                             >
-                                <div className="badge badge-primary badge-sm shrink-0">
-                                    {formatDate(meal.date)}
-                                </div>
-                                <span className="capitalize font-medium">{meal.mealType}</span>
-                                {meal.recipeName && (
-                                    <span className="text-base-content/60 text-sm truncate">
-                                        — {meal.recipeName}
-                                    </span>
+                                {recipe.image && (
+                                    <figure>
+                                        <img
+                                            src={recipe.image}
+                                            alt={recipe.title}
+                                            className="w-full h-36 object-cover"
+                                        />
+                                    </figure>
                                 )}
-                            </div>
+                                <div className="card-body p-3">
+                                    <h3 className="font-semibold text-sm leading-snug line-clamp-2">
+                                        {recipe.title}
+                                    </h3>
+                                </div>
+                            </Link>
                         ))}
                     </div>
                 )}
             </section>
+
         </div>
     );
 }

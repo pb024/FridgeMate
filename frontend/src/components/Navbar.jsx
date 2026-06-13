@@ -11,10 +11,10 @@ function Navbar() {
         }`
 
     return (
-        <nav className="navbar bg-base-200 border-b border-base-200 px-4 sticky top-0 z-50">
+        <nav className="navbar bg-base-200 border-b border-base-200 px-8 sticky top-0 z-50">
             <div className="navbar-start">
                 <NavLink to="/" className="text-xl font-bold text-primary">
-                    FridgeMate
+                    🥦 FridgeMate
                 </NavLink>
             </div>
 
@@ -36,12 +36,12 @@ function Navbar() {
             <div className="navbar-end">
                 <SignedOut>
                     <SignInButton mode="modal">
-                        <button className="btn btn-primary btn-sm">Sign In</button>
+                        <button className="btn btn-ghost btn-sm">Sign In</button>
                     </SignInButton>
                 </SignedOut>
                 <SignedIn>
                     <SignOutButton>
-                        <button className="btn btn-outline btn-sm">Sign Out</button>
+                        <button className="btn btn-ghost btn-sm">Sign Out</button>
                     </SignOutButton>
                 </SignedIn>
             </div>

@@ -47,3 +47,34 @@ export const deleteMeal = async (id) => {
     const { data } = await api.delete(`/recipes/${id}`);
     return data;
 };
+
+// SPOONACULAR API
+export const searchRecipesByInventory = async (number = 10) => {
+    const { data } = await api.get('/spoonacular/from-inventory', { params: { number } });
+    return data;
+};
+
+export const searchRecipesByKeyword = async (q, number = 10) => {
+    const { data } = await api.get('/spoonacular/search', { params: { q, number } });
+    return data;
+};
+
+export const getRecipeById = async (id) => {
+    const { data } = await api.get(`/spoonacular/${id}`);
+    return data;
+};
+
+export const getSavedRecipes = async () => {
+    const { data } = await api.get('/spoonacular/saved');
+    return data;
+};
+
+export const saveRecipe = async (recipe) => {
+    const { data } = await api.post('/spoonacular/saved', recipe);
+    return data;
+};
+
+export const unsaveRecipe = async (id) => {
+    const { data } = await api.delete(`/spoonacular/saved/${id}`);
+    return data;
+};

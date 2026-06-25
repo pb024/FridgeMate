@@ -103,7 +103,10 @@ export const unsaveRecipe = async (req: Request, res: Response) => {
         const { userId } = getAuth(req);
         if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-        const deleted = await queries.deleteSavedRecipeByOwner(req.params.id, userId);
+        const { id } = req.params;
+        if (typeof id !== "string") return res.status(400).json({ error: "Invalid saved recipe ID" });
+
+        const deleted = await queries.deleteSavedRecipeByOwner(id, userId);
         if (!deleted) return res.status(404).json({ error: "Saved recipe not found" });
 
         res.status(200).json({ message: "Recipe unsaved successfully" });
